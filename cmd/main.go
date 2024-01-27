@@ -26,7 +26,6 @@ func main() {
 
 	go func() {
 		log.Println("Server is start")
-
 		if err := app.ListenAndServe(); err != nil && err != http.ErrServerClosed {
 			log.Fatalf("HTTP server ListenAndServe error: %v", err)
 		}
