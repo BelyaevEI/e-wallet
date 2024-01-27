@@ -6,6 +6,7 @@ import (
 	"errors"
 
 	"github.com/BelyaevEI/e-wallet/internal/models"
+	_ "github.com/jackc/pgx/v5/stdlib"
 )
 
 type WalletStorage struct {
@@ -37,14 +38,8 @@ func (wallet *WalletStorage) CheckWallet(ctx context.Context, id uint32) (bool, 
 
 	var idEx uint32
 
-	row, err := wallet.db.QueryContext(ctx, "SELECT ID FROM wallet WHERE walletd_id = $1", id)
-	if err != nil {
-		return false, nil
-	}
-
-	defer row.Close()
-
-	if err = row.Scan(&idEx); err != nil {
+	row := wallet.db.QueryRowContext(ctx, "SELECT wallet_id FROM wallet WHERE wallet_id = $1", id)
+	if err := row.Scan(&idEx); err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
 			return true, nil
 		}
@@ -62,12 +57,8 @@ func (wallet *WalletStorage) CheckAmount(ctx context.Context, id uint32) (float6
 
 	var amount float64
 
-	row, err := wallet.db.QueryContext(ctx, "SELECT amount FROM wallet WHERE wallet_id = &1", id)
-	if err != nil {
-		return 0, err
-	}
-
-	if err = row.Scan(&amount); err != nil {
+	row := wallet.db.QueryRowContext(ctx, "SELECT amount FROM wallet WHERE wallet_id = $1", id)
+	if err := row.Scan(&amount); err != nil {
 		return 0, err
 	}
 	return amount, nil
@@ -83,14 +74,14 @@ func (wallet *WalletStorage) TransferFunds(ctx context.Context, walletFrom, wall
 	}
 
 	// Subtraction amount from wallet
-	_, err = tx.ExecContext(ctx, "UPDATE wallet SET amount = amount - &1  WHERE wallet_id = &2", walletTo.Amount, walletFrom.ID)
+	_, err = tx.ExecContext(ctx, "UPDATE wallet SET amount = amount - $1  WHERE wallet_id = $2", walletTo.Amount, walletFrom.ID)
 	if err != nil {
 		tx.Rollback()
 		return err
 	}
 
 	// Add amount to wallet
-	_, err = tx.ExecContext(ctx, "UPDATE wallet SET amount = amount + &1  WHERE wallet_id = &2", walletTo.Amount, walletTo.ID)
+	_, err = tx.ExecContext(ctx, "UPDATE wallet SET amount = amount + $1  WHERE wallet_id = $2", walletTo.Amount, walletTo.ID)
 	if err != nil {
 		tx.Rollback()
 		return err
@@ -108,14 +99,9 @@ func (wallet *WalletStorage) GetBalance(ctx context.Context, id uint32) (models.
 
 	var wal models.Wallet
 
-	row, err := wallet.db.QueryContext(ctx, "SELECT wallet_id amount FROM wallet WHERE ID = &1", id)
-	if err != nil {
-		return models.Wallet{}, err
-	}
-
-	if err = row.Scan(&wal); err != nil {
+	row := wallet.db.QueryRowContext(ctx, "SELECT wallet_id, amount FROM wallet WHERE wallet_id = $1", id)
+	if err := row.Scan(&wal.ID, &wal.Amount); err != nil {
 		return models.Wallet{}, err
 	}
 	return wal, nil
-
 }

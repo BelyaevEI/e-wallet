@@ -12,8 +12,9 @@ type (
 	// Struct of wallet
 	Wallet struct {
 		ID     uint32  `json:"id"`
-		Amount float32 `json:"balance"`
+		Amount float64 `json:"amount"`
 	}
+
 	// Struct of wallet history
 	WalletHistory struct {
 		Time   time.Time `json:"times"`

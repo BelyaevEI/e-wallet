@@ -6,6 +6,7 @@ import (
 	"errors"
 
 	"github.com/BelyaevEI/e-wallet/internal/models"
+	_ "github.com/jackc/pgx/v5/stdlib"
 )
 
 type WalletHistory struct {
@@ -36,7 +37,7 @@ func connect2WalletHistory(dsn string) (*WalletHistory, error) {
 func (history *WalletHistory) WriteTransation(ctx context.Context, walletFrom, walletTo models.Wallet) error {
 
 	_, err := history.db.ExecContext(ctx, `INSERT INTO history(times, from_id, to_id, amount) 
-											VALUES (CURRENT_TIMESTAMP, &1, &2, &3)`,
+											VALUES (CURRENT_TIMESTAMP, $1, $2, $3)`,
 		walletFrom.ID, walletTo.ID, walletTo.Amount)
 	if err != nil {
 		return err
@@ -49,7 +50,7 @@ func (history *WalletHistory) Get(ctx context.Context, id uint32) ([]models.Wall
 	historyWallet := make([]models.WalletHistory, 0)
 
 	rows, err := history.db.QueryContext(ctx, `SELECT times, from_id, to_id, amount FROM history 
-											WHERE from_id = $1 OR to_id = &1`, id)
+											WHERE from_id = $1 OR to_id = $1`, id)
 	if err != nil {
 		return nil, err
 	}
@@ -58,12 +59,12 @@ func (history *WalletHistory) Get(ctx context.Context, id uint32) ([]models.Wall
 
 	for rows.Next() {
 		var historyWal models.WalletHistory
-		err := rows.Scan(&historyWal)
+		err := rows.Scan(&historyWal.Time, &historyWal.FromID, &historyWal.ToID, &historyWal.Amount)
 		if err != nil {
 			if !errors.Is(err, sql.ErrNoRows) {
-				return nil, nil
+				return nil, err
 			}
-			return nil, err
+			return nil, nil
 		}
 
 		historyWallet = append(historyWallet, historyWal)

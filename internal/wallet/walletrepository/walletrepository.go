@@ -2,8 +2,12 @@ package walletrepository
 
 import (
 	"context"
+	"crypto/rand"
+	"encoding/binary"
 	"errors"
+	"log"
 	"sync"
+	"time"
 
 	"github.com/BelyaevEI/e-wallet/internal/models"
 	"github.com/BelyaevEI/e-wallet/internal/storage/database"
@@ -141,4 +145,23 @@ func (repo *WalletRepository) GetBalance(ctx context.Context, id uint32) (models
 	defer repo.mutex.Unlock()
 
 	return repo.store.WalletStorage.GetBalance(ctx, id)
+}
+
+func (repo *WalletRepository) GenerateUniqueID() uint32 {
+
+	time := time.Now().UnixNano()
+
+	randomBytes := make([]byte, 4)
+	_, err := rand.Read(randomBytes)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	// Convert random number into uint32
+	randomNumber := binary.BigEndian.Uint32(randomBytes)
+
+	// Convert to time into uint32 and adding random number
+	uniqueNumber := uint32(time) + randomNumber
+
+	return uniqueNumber
 }

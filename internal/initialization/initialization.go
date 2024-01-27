@@ -20,10 +20,10 @@ type Init struct {
 func GoInit(log *logger.Logger) (Init, error) {
 
 	// Reading config file
-	cfg, err := config.LoadConfig("../../")
+	cfg, err := config.LoadConfig("../")
 	if err != nil {
 		log.Log.Error("read config file is fail: ", err)
-		return Init{}, nil
+		return Init{}, err
 	}
 
 	// Connect to database

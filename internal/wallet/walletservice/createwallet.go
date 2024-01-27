@@ -26,12 +26,8 @@ func (service *Service) CreateWallet(writer http.ResponseWriter, request *http.R
 		return
 	}
 
-	// Unmarshal data
-	if err := json.Unmarshal(buf.Bytes(), &wallet); err != nil {
-		service.log.Log.Error("unmarshal data is failed: ", err)
-		writer.WriteHeader(http.StatusInternalServerError)
-		return
-	}
+	// Generating unique id wallet
+	wallet.ID = service.walletrepository.GenerateUniqueID()
 
 	// Create wallet
 	err = service.walletrepository.CreateWallet(ctx, wallet)

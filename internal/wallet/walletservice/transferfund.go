@@ -45,6 +45,8 @@ func (service *Service) TransferFunds(writer http.ResponseWriter, request *http.
 		return
 	}
 
+	service.log.Log.Info("wallet amount:", walletTo.Amount)
+
 	// Check wallets exists and balance is pozitiv
 	err = service.walletrepository.CheckWallets(ctx, walletFrom, walletTo)
 	if err != nil {
