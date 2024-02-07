@@ -9,6 +9,11 @@ import (
 	_ "github.com/jackc/pgx/v5/stdlib"
 )
 
+type WalletHist interface {
+	Get(ctx context.Context, id uint32) ([]models.WalletHistory, error)
+	WriteTransation(ctx context.Context, walletFrom models.Wallet, walletTo models.Wallet) error
+}
+
 type WalletHistory struct {
 	db *sql.DB
 }

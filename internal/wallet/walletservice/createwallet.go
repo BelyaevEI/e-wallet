@@ -1,7 +1,6 @@
 package walletservice
 
 import (
-	"bytes"
 	"encoding/json"
 	"net/http"
 
@@ -12,25 +11,25 @@ import (
 func (service *Service) CreateWallet(writer http.ResponseWriter, request *http.Request) {
 
 	var (
-		buf    bytes.Buffer
+		// buf    bytes.Buffer
 		wallet models.Wallet
 	)
 
 	ctx := request.Context()
 
 	// Getting data for create wallet
-	_, err := buf.ReadFrom(request.Body)
-	if err != nil {
-		service.log.Log.Error("reading body from request is failed: ", err)
-		writer.WriteHeader(http.StatusBadRequest)
-		return
-	}
+	// _, err := buf.ReadFrom(request.Body)
+	// if err != nil {
+	// 	service.log.Log.Error("reading body from request is failed: ", err)
+	// 	writer.WriteHeader(http.StatusBadRequest)
+	// 	return
+	// }
 
 	// Generating unique id wallet
 	wallet.ID = service.walletrepository.GenerateUniqueID()
 
 	// Create wallet
-	err = service.walletrepository.CreateWallet(ctx, wallet)
+	err := service.walletrepository.CreateWallet(ctx, wallet)
 	if err != nil {
 		service.log.Log.Error("creating wallet is failed: ", err)
 		writer.WriteHeader(http.StatusBadRequest)

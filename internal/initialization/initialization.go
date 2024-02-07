@@ -27,7 +27,7 @@ func GoInit(log *logger.Logger) (Init, error) {
 	}
 
 	// Connect to database
-	store, err := database.NewConnect(cfg.DSN)
+	store, err := database.NewConnect(cfg)
 	if err != nil {
 		log.Log.Error("connection to database is failed: ", err)
 	}
@@ -35,6 +35,9 @@ func GoInit(log *logger.Logger) (Init, error) {
 	// Create wallet repository
 	walletRepository := walletrepository.New(store)
 	walletservice := walletservice.New(log, walletRepository)
+
+	// Fill cache from DB
+	walletRepository.FillCache()
 
 	// Create new router
 	route := route.New(walletservice)

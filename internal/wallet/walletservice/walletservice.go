@@ -11,6 +11,7 @@ type Service struct {
 }
 
 func New(log *logger.Logger, walletrepository *walletrepository.WalletRepository) *Service {
+
 	return &Service{
 		log:              log,
 		walletrepository: walletrepository,

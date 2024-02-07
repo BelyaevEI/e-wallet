@@ -5,9 +5,9 @@ import (
 	"encoding/json"
 	"net/http"
 	"strconv"
+	"strings"
 
 	"github.com/BelyaevEI/e-wallet/internal/models"
-	"github.com/go-chi/chi"
 )
 
 func (service *Service) TransferFunds(writer http.ResponseWriter, request *http.Request) {
@@ -21,7 +21,10 @@ func (service *Service) TransferFunds(writer http.ResponseWriter, request *http.
 	ctx := request.Context()
 
 	// Get wallet id from transfer funds
-	walletFromId, err := strconv.Atoi(chi.URLParam(request, "walletid"))
+	// walletFromId, err := strconv.Atoi(chi.URLParam(request, "walletid"))
+	path := request.URL.Path
+	parts := strings.Split(path, "/")
+	walletFromId, err := strconv.Atoi(parts[len(parts)-2])
 	if err != nil {
 		service.log.Log.Error("reading wallet id from request is failed: ", err)
 		writer.WriteHeader(http.StatusBadRequest)
@@ -44,8 +47,6 @@ func (service *Service) TransferFunds(writer http.ResponseWriter, request *http.
 		writer.WriteHeader(http.StatusInternalServerError)
 		return
 	}
-
-	service.log.Log.Info("wallet amount:", walletTo.Amount)
 
 	// Check wallets exists and balance is pozitiv
 	err = service.walletrepository.CheckWallets(ctx, walletFrom, walletTo)

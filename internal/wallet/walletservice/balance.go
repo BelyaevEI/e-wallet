@@ -4,8 +4,7 @@ import (
 	"encoding/json"
 	"net/http"
 	"strconv"
-
-	"github.com/go-chi/chi"
+	"strings"
 )
 
 func (service *Service) GetWalletBalance(writer http.ResponseWriter, request *http.Request) {
@@ -13,7 +12,10 @@ func (service *Service) GetWalletBalance(writer http.ResponseWriter, request *ht
 	ctx := request.Context()
 
 	// Get wallet id
-	walletID, err := strconv.Atoi(chi.URLParam(request, "walletid"))
+	// walletID, err := strconv.Atoi(chi.URLParam(request, "walletid"))
+	path := request.URL.Path
+	parts := strings.Split(path, "/")
+	walletID, err := strconv.Atoi(parts[len(parts)-1])
 	if err != nil {
 		service.log.Log.Error("reading wallet id from request is failed: ", err)
 		writer.WriteHeader(http.StatusBadRequest)
