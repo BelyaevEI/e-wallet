@@ -40,12 +40,19 @@ func (repo *WalletRepository) CreateWallet(ctx context.Context, wallet models.Wa
 		return errors.New("wallet with this id is exists")
 	}
 
-	// Create new wallet
+	// Create new wallet in database
 	err = repo.store.WalletStorage.CreateWallet(ctx, wallet.ID)
 	if err != nil {
 		return err
 	}
 
+	wallet.Amount = 100
+
+	// Add wallet to cache
+	err = repo.store.Cache.AddWallet(wallet)
+	if err != nil {
+		return err
+	}
 	return nil
 }
 
@@ -92,10 +99,25 @@ func (repo *WalletRepository) TransferFunds(ctx context.Context, walletFrom, wal
 	repo.mutex.Lock()
 	defer repo.mutex.Unlock()
 
+	// Change amount of wallet in DB
 	err := repo.store.WalletStorage.TransferFunds(ctx, walletFrom, walletTo)
 	if err != nil {
 		return err
 	}
+
+	// Change amount of wallet in cache
+	// Source wallet
+	err = repo.store.Cache.ModifyWallet(walletFrom.ID, -walletTo.Amount)
+	if err != nil {
+		return nil
+	}
+
+	// Receiver wallet
+	err = repo.store.Cache.ModifyWallet(walletTo.ID, walletTo.Amount)
+	if err != nil {
+		return nil
+	}
+
 	return nil
 }
 
@@ -141,10 +163,21 @@ func (repo *WalletRepository) GetWalletHistory(ctx context.Context, id uint32) (
 
 func (repo *WalletRepository) GetBalance(ctx context.Context, id uint32) (models.Wallet, error) {
 
+	var wallet models.Wallet
+
 	repo.mutex.Lock()
 	defer repo.mutex.Unlock()
 
-	return repo.store.WalletStorage.GetBalance(ctx, id)
+	// Given balance from cache
+	balance, err := repo.store.Cache.GetBalance(id)
+	if err != nil {
+
+		//Given balance from db
+		return repo.store.WalletStorage.GetBalance(ctx, id)
+	}
+
+	wallet.ID, wallet.Amount = id, balance
+	return wallet, nil
 }
 
 func (repo *WalletRepository) GenerateUniqueID() uint32 {
@@ -164,4 +197,20 @@ func (repo *WalletRepository) GenerateUniqueID() uint32 {
 	uniqueNumber := uint32(time) + randomNumber
 
 	return uniqueNumber
+}
+
+func (repo *WalletRepository) FillCache() {
+
+	// Getting all wallet from db
+	wallets, err := repo.store.WalletStorage.GetAllWallet()
+	if err != nil {
+		return
+	}
+
+	// Fill the cache with data from the database
+	err = repo.store.Cache.FillCache(wallets)
+	if err != nil {
+		return
+	}
+
 }

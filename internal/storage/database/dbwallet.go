@@ -9,11 +9,20 @@ import (
 	_ "github.com/jackc/pgx/v5/stdlib"
 )
 
-type WalletStorage struct {
+type WalletStorage interface {
+	CheckAmount(ctx context.Context, id uint32) (float64, error)
+	CheckWallet(ctx context.Context, id uint32) (bool, error)
+	CreateWallet(ctx context.Context, id uint32) error
+	GetAllWallet() ([]models.Wallet, error)
+	GetBalance(ctx context.Context, id uint32) (models.Wallet, error)
+	TransferFunds(ctx context.Context, walletFrom models.Wallet, walletTo models.Wallet) error
+}
+
+type WalletStore struct {
 	db *sql.DB
 }
 
-func connect2Wallet(dsn string) (*WalletStorage, error) {
+func connect2Wallet(dsn string) (*WalletStore, error) {
 
 	db, err := sql.Open("pgx", dsn)
 	if err != nil {
@@ -27,12 +36,12 @@ func connect2Wallet(dsn string) (*WalletStorage, error) {
 	if err != nil {
 		return nil, err
 	}
-	return &WalletStorage{
+	return &WalletStore{
 		db: db,
 	}, nil
 }
 
-func (wallet *WalletStorage) CheckWallet(ctx context.Context, id uint32) (bool, error) {
+func (wallet *WalletStore) CheckWallet(ctx context.Context, id uint32) (bool, error) {
 	// true - wallet not exists
 	// false - wallet exists
 
@@ -48,12 +57,12 @@ func (wallet *WalletStorage) CheckWallet(ctx context.Context, id uint32) (bool, 
 	return false, nil
 }
 
-func (wallet *WalletStorage) CreateWallet(ctx context.Context, id uint32) error {
+func (wallet *WalletStore) CreateWallet(ctx context.Context, id uint32) error {
 	_, err := wallet.db.ExecContext(ctx, "INSERT INTO wallet(wallet_id, amount) VALUES ($1, 100.00)", id)
 	return err
 }
 
-func (wallet *WalletStorage) CheckAmount(ctx context.Context, id uint32) (float64, error) {
+func (wallet *WalletStore) CheckAmount(ctx context.Context, id uint32) (float64, error) {
 
 	var amount float64
 
@@ -65,7 +74,7 @@ func (wallet *WalletStorage) CheckAmount(ctx context.Context, id uint32) (float6
 
 }
 
-func (wallet *WalletStorage) TransferFunds(ctx context.Context, walletFrom, walletTo models.Wallet) error {
+func (wallet *WalletStore) TransferFunds(ctx context.Context, walletFrom, walletTo models.Wallet) error {
 
 	// Begin transaction for transfer funds between wallet
 	tx, err := wallet.db.Begin()
@@ -95,7 +104,7 @@ func (wallet *WalletStorage) TransferFunds(ctx context.Context, walletFrom, wall
 	return nil
 }
 
-func (wallet *WalletStorage) GetBalance(ctx context.Context, id uint32) (models.Wallet, error) {
+func (wallet *WalletStore) GetBalance(ctx context.Context, id uint32) (models.Wallet, error) {
 
 	var wal models.Wallet
 
@@ -104,4 +113,35 @@ func (wallet *WalletStorage) GetBalance(ctx context.Context, id uint32) (models.
 		return models.Wallet{}, err
 	}
 	return wal, nil
+}
+
+func (wallet *WalletStore) GetAllWallet() ([]models.Wallet, error) {
+
+	wallets := make([]models.Wallet, 0)
+
+	rows, err := wallet.db.Query("SELECT * FROM wallet")
+	if err != nil {
+		return nil, err
+	}
+
+	for rows.Next() {
+
+		var wallet models.Wallet
+
+		err = rows.Scan(&wallet.ID, &wallet.Amount)
+		if err != nil {
+			if !errors.Is(err, sql.ErrNoRows) {
+				return nil, err
+			}
+			return nil, nil
+		}
+		wallets = append(wallets, wallet)
+	}
+
+	err = rows.Err()
+	if err != nil {
+		return nil, err
+	}
+
+	return wallets, nil
 }

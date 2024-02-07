@@ -4,21 +4,22 @@ import (
 	"encoding/json"
 	"net/http"
 	"strconv"
+	"strings"
 
 	"github.com/BelyaevEI/e-wallet/internal/models"
-	"github.com/go-chi/chi"
 )
 
 func (service *Service) GetWalletHistory(writer http.ResponseWriter, request *http.Request) {
 
-	var (
-		walletFrom models.Wallet
-	)
+	var walletFrom models.Wallet
 
 	ctx := request.Context()
 
 	// Get wallet id
-	walletFromId, err := strconv.Atoi(chi.URLParam(request, "walletid"))
+	// walletFromId, err := strconv.Atoi(chi.URLParam(request, "walletid"))
+	path := request.URL.Path
+	parts := strings.Split(path, "/")
+	walletFromId, err := strconv.Atoi(parts[len(parts)-2])
 	if err != nil {
 		service.log.Log.Error("reading wallet id from request is failed: ", err)
 		writer.WriteHeader(http.StatusBadRequest)

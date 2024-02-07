@@ -6,9 +6,11 @@ import (
 )
 
 type Config struct {
-	DSN  string `mapstructure:"DSN"`
-	Host string `mapstructure:"Host"`
-	Port string `mapstructure:"Port"`
+	DSN           string `mapstructure:"DSN"`
+	RedisAddr     string `mapstructure:"RedisAddr"`
+	RedisPassword string `mapstructure:"RedisPassword"`
+	Host          string `mapstructure:"Host"`
+	Port          string `mapstructure:"Port"`
 }
 
 // Reading config file for setting application
