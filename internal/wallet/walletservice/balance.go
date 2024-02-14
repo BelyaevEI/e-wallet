@@ -7,6 +7,16 @@ import (
 	"strings"
 )
 
+// @Summary Balance
+// @Tags Handlers
+// @Description get balance by ID
+// @ID get-balance
+// @Accept       json
+// @Produce      json
+// @Param        walletid   path      int  true  "Wallet ID"
+// @Success 200 {integer} integer 1
+// @Router       /api/v1/wallet/ [get]
+
 func (service *Service) GetWalletBalance(writer http.ResponseWriter, request *http.Request) {
 
 	ctx := request.Context()

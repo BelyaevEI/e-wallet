@@ -12,6 +12,13 @@ import (
 	"github.com/BelyaevEI/e-wallet/internal/app"
 )
 
+// @title           E-Wallet API
+// @version         1.0
+// @description     API Server for E-Wallet Application
+
+// @host      localhost:8080
+// @BasePath  /
+
 func main() {
 
 	// Init application
