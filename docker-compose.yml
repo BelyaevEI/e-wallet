@@ -8,9 +8,15 @@ services:
       POSTGRES_DB: wallet
     ports:
       - "5432:5432"
-
-  app:
-    build: ./cmd/main
+  redis:
+    image: redis:latest
+    container_name: redis
     ports:
-      - "8080:8080"
-    depends_on: postgres      
+      - "6379:6379"
+
+  # app:
+  #   build: ./cmd/main
+  #   ports:
+  #     - "8080:8080"
+  #   depends_on: 
+  #     - postgres      
