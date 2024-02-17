@@ -55,8 +55,8 @@ Getting the history of incoming and outgoing transactions. The wallet ID is in t
 ##### Example response: 
 ```
 {
-	"time": "2024-02-14T15:35:00Z",
-	"from": "12345",
+  "time": "2024-02-14T15:35:00Z",
+  "from": "12345",
   "to": "123456",
   "amount": "10.00"
 
